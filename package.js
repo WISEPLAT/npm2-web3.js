@@ -1,7 +1,7 @@
 /* jshint ignore:start */
 Package.describe({
   name: 'wiseplat:web3',
-  version: '0.15.3',
+  version: '0.18.4',
   summary: 'Wiseplat JavaScript API, middleware to talk to a wiseplat node over RPC',
   git: 'https://github.com/wiseplat/wiseplat.js',
   // By default, Meteor will default to using README.md for documentation.

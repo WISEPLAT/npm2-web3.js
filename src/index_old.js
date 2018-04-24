@@ -17,12 +17,12 @@
 /**
  * @file web3.js
  * @authors:
- *   Jeffrey Wilcke <jeff@ethdev.com>
- *   Marek Kotewicz <marek@ethdev.com>
- *   Marian Oancea <marian@ethdev.com>
- *   Fabian Vogelsteller <fabian@ethdev.com>
- *   Gav Wood <g@ethdev.com>
- * @date 2014
+ *   Jeffrey Wilcke <jeffrey.wilcke@wiseplat.org>
+ *   Gav Wood <gav@ethcore.io>
+ *   Marek Kotewicz <marek@ethcore.io>
+ *   Marian Oancea <marian@wiseplat.org>
+ *   Fabian Vogelsteller <fabian@wiseplat.org>
+ * @date 2017
  */
 
 var RequestManager = require('./web3/requestmanager');
@@ -40,9 +40,10 @@ var sha3 = require('./utils/sha3');
 var extend = require('./web3/extend');
 var Batch = require('./web3/batch');
 var Property = require('./web3/property');
-var HttpProvider = require('./web3/httpprovider');
-var IpcProvider = require('./web3/ipcprovider');
-var BigNumber = require('bignumber.js');
+var HttpProvider = require('./web3/providers/httpprovider');
+var IpcProvider = require('./web3/providers/ipcprovider');
+var WebsocketProvider = require('./web3/providers/websocketprovider');
+var BigNumber = require('bn.js');
 
 
 
@@ -61,7 +62,8 @@ function Web3 (provider) {
     };
     this.providers = {
         HttpProvider: HttpProvider,
-        IpcProvider: IpcProvider
+        IpcProvider: IpcProvider,
+        WebsocketProvider: WebsocketProvider
     };
     this._extend = extend(this);
     this._extend({
@@ -72,7 +74,8 @@ function Web3 (provider) {
 // expose providers on the class
 Web3.providers = {
     HttpProvider: HttpProvider,
-    IpcProvider: IpcProvider
+    IpcProvider: IpcProvider,
+    WebsocketProvider: WebsocketProvider
 };
 
 Web3.prototype.setProvider = function (provider) {
@@ -80,10 +83,6 @@ Web3.prototype.setProvider = function (provider) {
     this.currentProvider = provider;
 };
 
-Web3.prototype.reset = function (keepIsSyncing) {
-    this._requestManager.reset(keepIsSyncing);
-    this.settings = new Settings();
-};
 
 Web3.prototype.BigNumber = BigNumber;
 Web3.prototype.toHex = utils.toHex;
@@ -91,13 +90,13 @@ Web3.prototype.toAscii = utils.toAscii;
 Web3.prototype.toUtf8 = utils.toUtf8;
 Web3.prototype.fromAscii = utils.fromAscii;
 Web3.prototype.fromUtf8 = utils.fromUtf8;
-Web3.prototype.toDecimal = utils.toDecimal;
-Web3.prototype.fromDecimal = utils.fromDecimal;
+Web3.prototype.toNumberString = utils.toNumberString;
+Web3.prototype.fromNumber = utils.fromNumber;
 Web3.prototype.toBigNumber = utils.toBigNumber;
 Web3.prototype.toWei = utils.toWei;
 Web3.prototype.fromWei = utils.fromWei;
 Web3.prototype.isAddress = utils.isAddress;
-Web3.prototype.isChecksumAddress = utils.isChecksumAddress;
+Web3.prototype.checkAddressChecksum = utils.checkAddressChecksum;
 Web3.prototype.toChecksumAddress = utils.toChecksumAddress;
 Web3.prototype.isIBAN = utils.isIBAN;
 
@@ -123,17 +122,17 @@ var properties = function () {
         new Property({
             name: 'version.network',
             getter: 'net_version',
-            inputFormatter: utils.toDecimal
+            inputFormatter: utils.toNumberString
         }),
         new Property({
             name: 'version.wiseplat',
             getter: 'wsh_protocolVersion',
-            inputFormatter: utils.toDecimal
+            inputFormatter: utils.toNumberString
         }),
         new Property({
             name: 'version.whisper',
             getter: 'shh_version',
-            inputFormatter: utils.toDecimal
+            inputFormatter: utils.toNumberString
         })
     ];
 };
@@ -142,9 +141,7 @@ Web3.prototype.isConnected = function(){
     return (this.currentProvider && this.currentProvider.isConnected());
 };
 
-Web3.prototype.createBatch = function () {
-    return new Batch(this);
-};
+
 
 module.exports = Web3;
 
